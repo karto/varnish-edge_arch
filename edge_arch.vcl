@@ -150,7 +150,7 @@ sub edge_arch_backend_response_cacheable {
 # Each Surrogate Control content
 
 sub edge_arch_set_surrogate_control_content {
-    if ("edge_arch_vtc" != server.identity && "www" != server.identity && "drupal" != server.identity) {
+    if ("edge_arch_vtc" != server.identity && "www" != server.identity && "varnishdrupalol" != server.identity) {
         std.log("edge_arch_backend_response: Need configuration to do Surrogate-Control Targeting for "+server.identity+"");
         std.syslog(156, "edge_arch_backend_response: Need configuration to do Surrogate-Control Targeting for "+server.identity+"");
         header.append(beresp.http.Warning, "699 "+server.identity+{" "Need configuration to do Surrogate-Control Targeting for "}+server.identity+{"" ""}+now+{"""});
@@ -161,8 +161,8 @@ sub edge_arch_set_surrogate_control_content {
     elsif ("www" == server.identity && beresp.http.Surrogate-Control ~ {"(?i)(^|,)\s*content\s*=\s*"[^"]*"\s*;\s*www\s*(,|$)"}) {
         set beresp.http.Surrogate-Control-Content = regsub(beresp.http.Surrogate-Control, {"(?i)^(?:.*,)?\s*content\s*=\s*"([^"]*)"\s*;\s*www\s*(?:,.*)?$"}, "\1");
     }
-    elsif ("drupal" == server.identity && beresp.http.Surrogate-Control ~ {"(?i)(^|,)\s*content\s*=\s*"[^"]*"\s*;\s*drupal\s*(,|$)"}) {
-        set beresp.http.Surrogate-Control-Content = regsub(beresp.http.Surrogate-Control, {"(?i)^(?:.*,)?\s*content\s*=\s*"([^"]*)"\s*;\s*drupal\s*(?:,.*)?$"}, "\1");
+    elsif ("varnishdrupalol" == server.identity && beresp.http.Surrogate-Control ~ {"(?i)(^|,)\s*content\s*=\s*"[^"]*"\s*;\s*varnishdrupalol\s*(,|$)"}) {
+        set beresp.http.Surrogate-Control-Content = regsub(beresp.http.Surrogate-Control, {"(?i)^(?:.*,)?\s*content\s*=\s*"([^"]*)"\s*;\s*varnishdrupalol\s*(?:,.*)?$"}, "\1");
     }
     elsif (beresp.http.Surrogate-Control ~ {"(?i)(^|,)\s*content\s*=\s*"[^"]*"\s*(,|$)"}) {
         set beresp.http.Surrogate-Control-Content = regsub(beresp.http.Surrogate-Control, {"(?i)^(?:.*,)?\s*content\s*=\s*"([^"]*)"\s*(?:,.*)?$"}, "\1");
@@ -218,24 +218,24 @@ sub edge_arch_set_surrogate_control {
     }
     
     ###
-    # Update ;drupal
+    # Update ;varnishdrupalol
     #
-    elsif ("drupal" == server.identity && beresp.http.Surrogate-Control ~ {"(?i)(^|,)\s*content\s*=\s*"[^"]*"\s*;\s*drupal\s*(,|$)"}) {
+    elsif ("varnishdrupalol" == server.identity && beresp.http.Surrogate-Control ~ {"(?i)(^|,)\s*content\s*=\s*"[^"]*"\s*;\s*varnishdrupalol\s*(,|$)"}) {
         # Empty Surrogate-Control so unset
         if (beresp.http.Surrogate-Control-Content ~ "^\s*$" && 
-                beresp.http.Surrogate-Control ~ {"(?i)^\s*content\s*=\s*"[^"]*"\s*;\s*drupal\s*$"}) {
+                beresp.http.Surrogate-Control ~ {"(?i)^\s*content\s*=\s*"[^"]*"\s*;\s*varnishdrupalol\s*$"}) {
             unset beresp.http.Surrogate-Control;
         }
         # Empty Surrogate-Control-Content so remove
         elsif (beresp.http.Surrogate-Control-Content ~ "^\s*$") {
             set beresp.http.Surrogate-Control = regsub(regsub(beresp.http.Surrogate-Control, 
-                {"(?i)(^|,)\s*content\s*=\s*"[^"]*"\s*;\s*drupal\s*(?=,|$)"}, ""), "^\s*(,\s*)?", "");
+                {"(?i)(^|,)\s*content\s*=\s*"[^"]*"\s*;\s*varnishdrupalol\s*(?=,|$)"}, ""), "^\s*(,\s*)?", "");
         }
         # Update changed Surrogate-Control-Content
         elsif (beresp.http.Surrogate-Control-Content != regsub(beresp.http.Surrogate-Control, 
-                {"(?i)^(?:.*,)?\s*content\s*=\s*"([^"]*)"\s*;\s*drupal\s*(?:,.*)?$"}, "\1")) {
+                {"(?i)^(?:.*,)?\s*content\s*=\s*"([^"]*)"\s*;\s*varnishdrupalol\s*(?:,.*)?$"}, "\1")) {
             set beresp.http.Surrogate-Control = regsub(beresp.http.Surrogate-Control, 
-                {"(?i)((?:^|,)\s*content\s*=\s*")[^"]*("\s*;\s*drupal\s*)(?=,|$)"}, 
+                {"(?i)((?:^|,)\s*content\s*=\s*")[^"]*("\s*;\s*varnishdrupalol\s*)(?=,|$)"}, 
                 "\1"+beresp.http.Surrogate-Control-Content+"\2");
         }
     }
@@ -300,17 +300,17 @@ sub edge_arch_set_x_cacheable {
         }
     }
     ###
-    # Process ;drupal
+    # Process ;varnishdrupalol
     #
-    elsif ("drupal" == server.identity && beresp.http.Surrogate-Control ~ 
-            "(?i)(^|,)\s*(no-store|no-store-remote|max-age\s*=\s*\d+(\s*\+\s*\d+)?)\s*;\s*drupal\s*(,|$)") {
-        if (beresp.http.Surrogate-Control ~ "(?i)(^|,)\s*no-store\s*;\s*drupal\s*(,|$)") {
-            set beresp.http.X-Cacheable = "sc:no-store;drupal";
+    elsif ("varnishdrupalol" == server.identity && beresp.http.Surrogate-Control ~ 
+            "(?i)(^|,)\s*(no-store|no-store-remote|max-age\s*=\s*\d+(\s*\+\s*\d+)?)\s*;\s*varnishdrupalol\s*(,|$)") {
+        if (beresp.http.Surrogate-Control ~ "(?i)(^|,)\s*no-store\s*;\s*varnishdrupalol\s*(,|$)") {
+            set beresp.http.X-Cacheable = "sc:no-store;varnishdrupalol";
         }
-        elsif (beresp.http.Surrogate-Control ~ "(?i)(^|,)\s*max-age\s*=\s*\d*(\s*\+\s*\d*)?\s*;\s*drupal\s*(,|$)") {
+        elsif (beresp.http.Surrogate-Control ~ "(?i)(^|,)\s*max-age\s*=\s*\d*(\s*\+\s*\d*)?\s*;\s*varnishdrupalol\s*(,|$)") {
             set beresp.http.X-Cacheable = "sc:max-age="+regsub(beresp.http.Surrogate-Control, 
-                "(?i)^(?:.*,)?\s*max-age\s*=\s*(\d*)(?:\s*(\+)\s*(\d*))?\s*;\s*drupal\s*(?:,.*)?$", 
-                "\1\2\3")+";drupal";
+                "(?i)^(?:.*,)?\s*max-age\s*=\s*(\d*)(?:\s*(\+)\s*(\d*))?\s*;\s*varnishdrupalol\s*(?:,.*)?$", 
+                "\1\2\3")+";varnishdrupalol";
         }
     }
     ###
